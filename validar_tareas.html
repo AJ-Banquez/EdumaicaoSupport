@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validación de Tareas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg" id="loginContainer">
+        <h2 class="text-2xl font-bold mb-4 text-center">Ingrese Código de Verificación</h2>
+        <input type="password" id="codigoInput" placeholder="Código" class="border p-2 rounded w-full mb-2 text-center">
+        <button onclick="verificarCodigo()" class="bg-blue-500 text-white px-4 py-2 rounded w-full">Ingresar</button>
+        <p id="mensaje" class="text-red-500 mt-2 hidden text-center">Código incorrecto</p>
+    </div>
+
+    <div class="max-w-4xl mx-auto bg-white p-6 mt-6 rounded-lg shadow-lg hidden" id="aprobacionContainer">
+        <h2 class="text-2xl font-bold mb-4 text-center">Aprobar o Rechazar Tareas</h2>
+        <table class="w-full bg-white shadow-lg rounded-lg text-center mb-4">
+            <thead>
+                <tr class="bg-gray-300">
+                    <th class="p-2">Actividad</th>
+                    <th class="p-2">Fecha</th>
+                    <th class="p-2">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="listaTareas"></tbody>
+        </table>
+        <button onclick="mostrarHistorial()" class="flex items-center gap-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">
+            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 8v5h5v2h-7V8h2zm0-6C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+            </svg>
+            <span>Historial</span>
+        </button>
+        
+    </div>
+
+    <div id="modalHistorial" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg max-w-3xl w-full">
+            <h2 class="text-2xl font-bold mb-4 text-center">Historial de Aprobaciones y Rechazos</h2>
+            <table class="w-full bg-white shadow-lg rounded-lg text-center">
+                <thead>
+                    <tr class="bg-gray-300">
+                        <th class="p-2">Actividad</th>
+                        <th class="p-2">Fecha</th>
+                        <th class="p-2">Estado</th>
+                        <th class="p-2">Motivo</th>
+                    </tr>
+                </thead>
+                <tbody id="historialTareas"></tbody>
+            </table>
+            <button onclick="cerrarHistorial()" class="bg-red-500 text-white px-4 py-2 mt-4 rounded w-full">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        const codigoSecreto = "1234";
+
+        function verificarCodigo() {
+            const codigoIngresado = document.getElementById("codigoInput").value;
+            if (codigoIngresado === codigoSecreto) {
+                document.getElementById("loginContainer").classList.add("hidden");
+                document.getElementById("aprobacionContainer").classList.remove("hidden");
+                cargarTareas();
+            } else {
+                document.getElementById("mensaje").classList.remove("hidden");
+            }
+        }
+
+        function cargarTareas() {
+            const lista = document.getElementById("listaTareas");
+            lista.innerHTML = "";
+            const tareas = JSON.parse(localStorage.getItem("actividades")) || [];
+            tareas.forEach((item, index) => {
+                const row = document.createElement("tr");
+                row.className = "border-b";
+                row.innerHTML = `
+                    <td class="p-2">${item.actividad}</td>
+                    <td class="p-2">${item.fecha}</td>
+                    <td class="p-2 flex space-x-4 justify-center">
+                        <button onclick="aprobarTarea(${index})" class="bg-green-500 text-white px-3 py-1 rounded">Aprobar</button>
+                        <button onclick="rechazarTarea(${index})" class="bg-red-500 text-white px-3 py-1 rounded">Rechazar</button>
+                    </td>
+                `;
+                lista.appendChild(row);
+            });
+        }
+
+        function aprobarTarea(index) {
+            const tareas = JSON.parse(localStorage.getItem("actividades")) || [];
+            const historial = JSON.parse(localStorage.getItem("historial")) || [];
+            historial.push({ actividad: tareas[index].actividad, fecha: tareas[index].fecha, estado: "Aprobado", motivo: "" });
+            localStorage.setItem("historial", JSON.stringify(historial));
+            tareas.splice(index, 1);
+            localStorage.setItem("actividades", JSON.stringify(tareas));
+            cargarTareas();
+        }
+
+        function rechazarTarea(index) {
+            const motivo = prompt("Ingrese el motivo de rechazo:");
+            if (motivo) {
+                const tareas = JSON.parse(localStorage.getItem("actividades")) || [];
+                const historial = JSON.parse(localStorage.getItem("historial")) || [];
+                historial.push({ actividad: tareas[index].actividad, fecha: tareas[index].fecha, estado: "Rechazado", motivo });
+                localStorage.setItem("historial", JSON.stringify(historial));
+                tareas.splice(index, 1);
+                localStorage.setItem("actividades", JSON.stringify(tareas));
+                cargarTareas();
+            }
+        }
+
+        function mostrarHistorial() {
+            document.getElementById("modalHistorial").classList.remove("hidden");
+            const lista = document.getElementById("historialTareas");
+            lista.innerHTML = "";
+            const historial = JSON.parse(localStorage.getItem("historial")) || [];
+            historial.forEach(item => {
+                const row = document.createElement("tr");
+                row.className = "border-b";
+                row.innerHTML = `
+                    <td class="p-2">${item.actividad}</td>
+                    <td class="p-2">${item.fecha}</td>
+                    <td class="p-2 ${item.estado === 'Aprobado' ? 'text-green-500' : 'text-red-500'}">${item.estado}</td>
+                    <td class="p-2">${item.motivo}</td>
+                `;
+                lista.appendChild(row);
+            });
+        }
+
+        function cerrarHistorial() {
+            document.getElementById("modalHistorial").classList.add("hidden");
+        }
+    </script>
+</body>
+</html>

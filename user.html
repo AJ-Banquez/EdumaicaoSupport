@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg" id="loginContainer">
+        <h2 class="text-2xl font-bold mb-4 text-center">Iniciar Sesión</h2>
+        <input type="email" id="emailInput" placeholder="Correo" class="border p-2 rounded w-full mb-2 text-center">
+        <button onclick="enviarToken()" class="bg-blue-500 text-white px-4 py-2 rounded w-full">Enviar Token</button>
+    </div>
+
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg hidden" id="tokenContainer">
+        <h2 class="text-2xl font-bold mb-4 text-center">Ingrese el Token</h2>
+        <input type="text" id="tokenInput" placeholder="Token" class="border p-2 rounded w-full mb-2 text-center">
+        <button onclick="verificarToken()" class="bg-green-500 text-white px-4 py-2 rounded w-full">Validar</button>
+    </div>
+    <script>
+        emailjs.init("8lbT46HdJiPHRF56O"); // Reemplázalo con tu clave pública real
+    
+        const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+        let tokenGenerado = "";
+        let usuarioActual = null;
+    
+        function enviarToken() {
+            const email = document.getElementById("emailInput").value.trim();
+            if (!email) {
+                alert("Por favor, ingrese un correo válido.");
+                return;
+            }
+    
+            usuarioActual = usuarios.find(u => u.email === email);
+            if (!usuarioActual) {
+                alert("Correo no registrado");
+                return;
+            }
+    
+            tokenGenerado = Math.floor(100000 + Math.random() * 900000).toString();
+            localStorage.setItem("token", tokenGenerado);
+    
+            const templateParams = {
+                email: email,  // Ahora coincide con la variable de EmailJS {{email}}
+                token: tokenGenerado
+            };
+    
+            console.log("Enviando correo con:", templateParams); // Para depuración
+    
+            emailjs.send("service_r5gsb8w", "template_bb70y5e", templateParams)
+            .then(() => {
+                document.getElementById("loginContainer").classList.add("hidden");
+                document.getElementById("tokenContainer").classList.remove("hidden");
+            })
+            .catch(error => alert("Error al enviar el correo: " + error.text));
+        }
+    
+        function verificarToken() {
+            const tokenIngresado = document.getElementById("tokenInput").value;
+            if (tokenIngresado === localStorage.getItem("token")) {
+                localStorage.removeItem("token");
+                if (usuarioActual.rol === "Aprobador") {
+                    window.location.href = "validar_tareas.html";
+                } else {
+                    window.location.href = "index.html";
+                }
+            } else {
+                alert("Token incorrecto");
+            }
+        }
+    </script>
+    
+
+</body>
+</html>

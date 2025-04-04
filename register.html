@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Usuarios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg">
+        <h2 class="text-2xl font-bold mb-4 text-center">Registrar Usuario</h2>
+        <input type="text" id="nombreInput" placeholder="Nombre" class="border p-2 rounded w-full mb-2">
+        <input type="email" id="emailInput" placeholder="Correo" class="border p-2 rounded w-full mb-2">
+        <select id="rolInput" class="border p-2 rounded w-full mb-2">
+            <option value="Aprobador">Aprobador</option>
+            <option value="Digitador">Digitador</option>
+        </select>
+        <button onclick="registrarUsuario()" class="bg-blue-500 text-white px-4 py-2 rounded w-full">Registrar</button>
+    </div>
+
+    <script>
+        function registrarUsuario() {
+            const nombre = document.getElementById("nombreInput").value;
+            const email = document.getElementById("emailInput").value;
+            const rol = document.getElementById("rolInput").value;
+
+            if (!nombre || !email) {
+                alert("Por favor, completa todos los campos");
+                return;
+            }
+
+            let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+            if (usuarios.some(user => user.email === email)) {
+                alert("El correo ya está registrado");
+                return;
+            }
+
+            usuarios.push({ nombre, email, rol });
+            localStorage.setItem("usuarios", JSON.stringify(usuarios));
+            alert("Usuario registrado correctamente");
+            document.getElementById("nombreInput").value = "";
+            document.getElementById("emailInput").value = "";
+        }
+    </script>
+</body>
+</html>
